@@ -3,8 +3,6 @@ library(httr)
 library(jsonlite)
 library(dplyr)
 library(lubridate)
-# Save API key
-api_key <- "sk-your-api-key-here" 
 #' API Call to OpenAI
 #'
 #' This function is a common handler for making API calls to OpenAI. It was primarily made to be used with the other functions in this script.
