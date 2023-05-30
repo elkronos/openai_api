@@ -1,14 +1,11 @@
-#' Generate a text response using OpenAI's API
-library(httr)
-library(stringr)
-#' This function sends a prompt to the OpenAI API and returns the generated text. 
+#' This function sends a prompt to the OpenAI API and returns the generated text.
 #' It handles API communication, error checking, and basic formatting of the response.
 #'
 #' Register for an API secert here: https://platform.openai.com/account/api-keys
-#' 
+#'
 #' @importFrom httr RETRY POST content_type_json add_headers stop_for_status content
 #' @importFrom stringr str_trim
-#' 
+#'
 #' @param prompt The prompt to send to the API.
 #' @param model The model to use for generating the response. Default is "gpt-3.5-turbo".
 #'     This can be adjusted according to the available models in the OpenAI API (such as "gpt-4")
@@ -24,24 +21,24 @@ library(stringr)
 #' @return A character string containing the generated text.
 #'
 #' @examples
+#' \dontrun{
 #' gpt_api("Write a poem about my cat Sam")
 #' gpt_api("Tell me a joke.", model = "gpt-3.5-turbo")
 #' gpt_api("Write a poem about my cat Sam", model = "gpt-4")
-#' 
+#' }
 #' @export
-# Function
-gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_tokens = 50, 
-                system_message = NULL, num_retries = 3, pause_base = 1, 
+gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_tokens = 50,
+                system_message = NULL, num_retries = 3, pause_base = 1,
                 presence_penalty = 0.0, frequency_penalty = 0.0) {
   messages <- list(list(role = "user", content = prompt))
   if (!is.null(system_message)) {
     # prepend system message to messages list
     messages <- append(list(list(role = "system", content = system_message)), messages)
   }
-  
+
   response <- RETRY(
     "POST",
-    url = "https://api.openai.com/v1/chat/completions", 
+    url = "https://api.openai.com/v1/chat/completions",
     add_headers(Authorization = paste("Bearer", api_key)),
     content_type_json(),
     encode = "json",
@@ -56,17 +53,17 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
       frequency_penalty = frequency_penalty
     )
   )
-  
+
   # Check for HTTP errors
   stop_for_status(response)
-  
+
   # Get and clean the message
   if (length(content(response)$choices) > 0) {
     message <- content(response)$choices[[1]]$message$content
   } else {
     message <- "The model did not return a message. You may need to increase max_tokens."
   }
-  
+
   clean_message <- gsub("\n", " ", message) # replace newlines with spaces
   clean_message <- str_trim(clean_message) # trim white spaces
   return(clean_message)
@@ -74,9 +71,9 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
 
 #' Estimate token count of a text string
 #'
-#' This function provides a rough estimate of the number of tokens in a text string, 
-#' based on splitting the text into words, punctuation and whitespaces. 
-#' Note that this is an approximation and may not match the token count used 
+#' This function provides a rough estimate of the number of tokens in a text string,
+#' based on splitting the text into words, punctuation and whitespaces.
+#' Note that this is an approximation and may not match the token count used
 #' by specific language models.
 #'
 #' @param text A character string for which to estimate the token count.
@@ -91,7 +88,7 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
 count_tokens <- function(text) {
   # Split text into words, punctuation and whitespaces
   tokens <- strsplit(text, "(?<=\\W)(?=\\w)|(?<=\\w)(?=\\W)", perl = TRUE)[[1]]
-  
+
   # Return number of tokens
   return(length(tokens))
 }
@@ -113,6 +110,8 @@ count_tokens <- function(text) {
 #'     \item{total_cost}{The total estimated cost (input_cost + output_cost).}
 #'   }
 #'
+#' @export
+#'
 #' @examples
 #' input_tokens <- 1200
 #' output_tokens <- 800
@@ -126,7 +125,7 @@ count_tokens <- function(text) {
 #' print(paste("Total cost:", cost_estimate$total_cost))
 #'
 estimate_cost <- function(input_tokens, output_tokens, model = "gpt-3.5-turbo") {
-  
+
   if (model == "gpt-4") {
     price_1k_in <- ifelse(input_tokens <= 8000, 0.03, 0.06)
     price_1k_out <- ifelse(output_tokens <= 8000, 0.06, 0.12)
@@ -134,11 +133,11 @@ estimate_cost <- function(input_tokens, output_tokens, model = "gpt-3.5-turbo") 
     price_1k_in <- 0.002
     price_1k_out <- 0.002
   }
-  
+
   input_cost <- input_tokens / 1000 * price_1k_in
   output_cost <- output_tokens / 1000 * price_1k_out
   total_cost <- input_cost + output_cost
-  
+
   result <- list(
     input_tokens = input_tokens,
     output_tokens = output_tokens,
@@ -146,6 +145,6 @@ estimate_cost <- function(input_tokens, output_tokens, model = "gpt-3.5-turbo") 
     output_cost = output_cost,
     total_cost = total_cost
   )
-  
+
   return(result)
 }

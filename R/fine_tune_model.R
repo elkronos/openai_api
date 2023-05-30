@@ -1,6 +1,3 @@
-# Load libraries
-library(httr)
-library(jsonlite)
 #' Fine-tunes a GPT model using the OpenAI API
 #'
 #' This function allows you to fine-tune a GPT model using the OpenAI API. The model is trained on a provided dataset and can be configured with several parameters.
@@ -29,33 +26,33 @@ library(jsonlite)
 #' training_file_id <- "your_training_file_id"
 #' validation_file_id <- "your_validation_file_id"
 #' your_api_key <- "your_api_key"
-#' 
+#'
 #' result <- fine_tune_model(
 #'   training_file = training_file_id,
 #'   validation_file = validation_file_id,
-#'   model = "curie", 
-#'   n_epochs = 4, 
-#'   batch_size = NULL, 
+#'   model = "curie",
+#'   n_epochs = 4,
+#'   batch_size = NULL,
 #'   learning_rate_multiplier = NULL,
-#'   prompt_loss_weight = 0.01, 
+#'   prompt_loss_weight = 0.01,
 #'   compute_classification_metrics = FALSE,
-#'   classification_n_classes = NULL, 
+#'   classification_n_classes = NULL,
 #'   classification_positive_class = NULL,
-#'   classification_betas = NULL, 
+#'   classification_betas = NULL,
 #'   suffix = NULL
 #' )
 #' print(result)
 #' }
 # Define function
-fine_tune_model <- function(training_file, validation_file=NULL, model="curie", 
+fine_tune_model <- function(training_file, validation_file=NULL, model="curie",
                             n_epochs=4, batch_size=NULL, learning_rate_multiplier=NULL,
                             prompt_loss_weight=0.01, compute_classification_metrics=FALSE,
                             classification_n_classes=NULL, classification_positive_class=NULL,
                             classification_betas=NULL, suffix=NULL) {
-  
+
   # Define the API URL
   url <- "https://api.openai.com/v1/fine-tunes"
-  
+
   # Create the request body
   body <- list(
     training_file = training_file,
@@ -71,19 +68,19 @@ fine_tune_model <- function(training_file, validation_file=NULL, model="curie",
     classification_betas = classification_betas,
     suffix = suffix
   )
-  
+
   # Remove NULL entries
   body <- body[!unlist(lapply(body, is.null))]
-  
+
   # Define the headers
   headers <- add_headers(
     "Authorization" = paste("Bearer", "your_api_key"),
     "Content-Type" = "application/json"
   )
-  
+
   # Make the POST request
   response <- POST(url, headers, body = jsonlite::toJSON(body, auto_unbox = TRUE))
-  
+
   # Check if the request was successful
   if (response$status_code >= 200 && response$status_code < 300) {
     # If the request was successful, parse and return the response

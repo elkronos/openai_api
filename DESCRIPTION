@@ -1,0 +1,25 @@
+Package: openaiapi
+Title: Query the OpenAI GPT API for Documents
+Version: 0.0.0.9000
+Authors@R: 
+    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Query the OpenAI GPT API for documents.  
+  A file is imported and parsed, then the API can be queried to 
+  ask questions related to the document.
+Depends: 
+  R (>= 3.6)
+Imports:
+  dplyr, 
+  httr, 
+  jsonlite, 
+  magick,
+  pdftools, 
+  readr, 
+  readtext,
+  stringr, 
+  tools
+License: CC0
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3

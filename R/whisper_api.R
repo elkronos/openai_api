@@ -1,5 +1,3 @@
-library(httr)
-library(jsonlite)
 #' Transcribe Audio Using OpenAI's API
 #'
 #' This function uses the OpenAI API to transcribe an audio file.
@@ -23,7 +21,7 @@ library(jsonlite)
 #' file_path <- "C:/path_to_your_file/audiofile.wav"
 #' transcription <- whisper_transcribe(file_path, api_key)
 #' print(transcription)
-#' 
+#'
 #' # You may download an example audio file to transcribe here
 #' # https://www.voiptroubleshooter.com/open_speech/american/OSR_us_000_0061_8k.wav
 #' }
@@ -42,21 +40,21 @@ whisper_transcribe <- function(file_path, api_key, model = "whisper-1", response
     response_format = response_format,
     temperature = temperature
   )
-  
+
   if (!is.null(language)) {
     body$language <- language
   }
-  
+
   if (!is.null(prompt)) {
     body$prompt <- prompt
   }
-  
+
   res <- POST(url,
               add_headers(c(Authorization = paste("Bearer", api_key),
                             "Content-Type" = "multipart/form-data")),
               body = body,
               encode = "multipart")
-  
+
   content(res, "parsed", "application/json")
 }
 
@@ -99,16 +97,16 @@ whisper_translate <- function(file_path, api_key, model = "whisper-1", response_
     response_format = response_format,
     temperature = temperature
   )
-  
+
   if (!is.null(prompt)) {
     body$prompt <- prompt
   }
-  
+
   res <- POST(url,
               add_headers(c(Authorization = paste("Bearer", api_key),
                             "Content-Type" = "multipart/form-data")),
               body = body,
               encode = "multipart")
-  
+
   content(res, "parsed", "application/json")
 }
