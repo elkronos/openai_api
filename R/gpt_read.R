@@ -126,6 +126,7 @@ search_text <- function(text, keywords, window_size = 500) {
 #' @param pause_base The base pause time between retries. Default is 3.
 #' @param presence_penalty The presence penalty for text generation. Default is 0.0.
 #' @param frequency_penalty The frequency penalty for text generation. Default is 0.0.
+#' @param api_key Character string for the API key assigned to the user by OpenAI
 #'
 #' @return The generated response from the GPT-3.5 Turbo model.
 #'
@@ -140,25 +141,28 @@ search_text <- function(text, keywords, window_size = 500) {
 #' # Call the function
 #' text <- parse_text(file)
 #'
+#' # api key
+#' api_key <- Sys.getenv('OPENAI_API_KEY')
+#'
 #' # Ask question
 #' question <- "what is this article about?"
 #' # Get answer
-#' gpt_read(chunk_list = text, question = question) -> response_1
+#' gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_1
 #' # Review response
 #' print(response_1)
 #'
 #' question <- "what is the stupid backoff method?"
-#' gpt_read(chunk_list = text, question = question) -> response_2
+#' gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_2
 #' print(response_2)
 #'
 #' question <- "Why do kittens meow?"
-#' gpt_read(chunk_list = text, question = question) -> response_3
+#' gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_3
 #' print(response_3)
 #' }
 gpt_read <- function(chunk_list, question = NULL, model = "gpt-3.5-turbo", temperature = 0.2, max_tokens = 100,
                      system_message_1 = "You are a research assistant trying to answer questions posed based on text you are supplied with. Your goal is to provide answers based on the text provided. If the question is not related to or answered by the text, please only say you cannot find the answer in the text.",
                      system_message_2 = "You are a content editor who will read the previous responses from the AI and merge them into a single concise response to the question. If they mention that the answer cannot be found in the text for each chunk of text, only say that.",
-                     num_retries = 5, pause_base = 3, presence_penalty = 0.0, frequency_penalty = 0.0) {
+                     num_retries = 5, pause_base = 3, presence_penalty = 0.0, frequency_penalty = 0.0, api_key) {
 
   if (is.null(question)) {
     stop("A question must be provided.")

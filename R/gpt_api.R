@@ -17,19 +17,21 @@
 #' @param pause_base The number of seconds to wait between retries. Default is 1.
 #' @param presence_penalty The penalty for new tokens based on their presence in the input. Default is 0.0.
 #' @param frequency_penalty The penalty for new tokens based on their frequency in the input. Default is 0.0.
+#' @param api_key Character string for the API key assigned to the user by OpenAI
 #'
 #' @return A character string containing the generated text.
 #'
 #' @examples
 #' \dontrun{
-#' gpt_api("Write a poem about my cat Sam")
-#' gpt_api("Tell me a joke.", model = "gpt-3.5-turbo")
-#' gpt_api("Write a poem about my cat Sam", model = "gpt-4")
+#' api_key <- Sys.getenv('OPENAI_API_KEY')
+#' gpt_api("Write a poem about my cat Sam", api_key = api_key)
+#' gpt_api("Tell me a joke.", model = "gpt-3.5-turbo", api_key = api_key)
+#' gpt_api("Write a poem about my cat Sam", model = "gpt-4", api_key = api_key)
 #' }
 #' @export
 gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_tokens = 50,
                 system_message = NULL, num_retries = 3, pause_base = 1,
-                presence_penalty = 0.0, frequency_penalty = 0.0) {
+                presence_penalty = 0.0, frequency_penalty = 0.0, api_key) {
   messages <- list(list(role = "user", content = prompt))
   if (!is.null(system_message)) {
     # prepend system message to messages list

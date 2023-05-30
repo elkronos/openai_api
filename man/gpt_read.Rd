@@ -17,7 +17,8 @@ gpt_read(
   num_retries = 5,
   pause_base = 3,
   presence_penalty = 0,
-  frequency_penalty = 0
+  frequency_penalty = 0,
+  api_key
 )
 }
 \arguments{
@@ -42,6 +43,8 @@ gpt_read(
 \item{presence_penalty}{The presence penalty for text generation. Default is 0.0.}
 
 \item{frequency_penalty}{The frequency penalty for text generation. Default is 0.0.}
+
+\item{api_key}{Character string for the API key assigned to the user by OpenAI}
 }
 \value{
 The generated response from the GPT-3.5 Turbo model.
@@ -58,19 +61,22 @@ file <- "~/Desktop/"
 # Call the function
 text <- parse_text(file)
 
+# api key
+api_key <- Sys.getenv('OPENAI_API_KEY')
+
 # Ask question
 question <- "what is this article about?"
 # Get answer
-gpt_read(chunk_list = text, question = question) -> response_1
+gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_1
 # Review response
 print(response_1)
 
 question <- "what is the stupid backoff method?"
-gpt_read(chunk_list = text, question = question) -> response_2
+gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_2
 print(response_2)
 
 question <- "Why do kittens meow?"
-gpt_read(chunk_list = text, question = question) -> response_3
+gpt_read(chunk_list = text, question = question, api_key = api_key) -> response_3
 print(response_3)
 }
 }
