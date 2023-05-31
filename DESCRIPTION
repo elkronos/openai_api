@@ -2,7 +2,7 @@ Package: openaiapi
 Title: Query the OpenAI GPT API for Documents
 Version: 0.0.0.9000
 Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
+    person("A.", "Student", , "napoleonic_bores@proton.me", role = c("aut", "cre"),
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: Query the OpenAI GPT API for documents.  
   A file is imported and parsed, then the API can be queried to 
