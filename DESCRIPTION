@@ -1,5 +1,5 @@
 Package: openaiapi
-Title: Query the OpenAI GPT API for Documents
+Title: Interact with OpenAIs API
 Version: 0.0.0.9000
 Authors@R: 
     person("A.", "Student", , "napoleonic_bores@proton.me", role = c("aut", "cre"),
