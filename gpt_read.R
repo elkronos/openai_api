@@ -4,6 +4,9 @@ library(tools)
 library(pdftools)
 library(stringr)
 library(readtext)
+library(tesseract)
+library(magrittr)
+library(magick)
 # Set API key. 
 # Sign-up for API key with a plus account here: https://platform.openai.com/signup
 # Get key once signed up here: https://platform.openai.com/account/api-keys
@@ -11,7 +14,7 @@ api_key <- "sk-your_api_key"  # Replace with your actual API key
 
 #' Parse documents to tokens for GPT
 #'
-#' This function parses different types of documents (PDF, DOCX, TXT) and converts them into tokens for further processing with GPT (Generative Pre-trained Transformer) models. It removes whitespace, special characters, and numbers from the text, and splits it into chunks of tokens to avoid exceeding the model's token limit.
+#' This function parses different types of documents (PDF, DOCX, TXT) and images (PNG, JPG, TIF), performs optical character recognition (OCR) on scanned documents and images, and converts them into tokens for further processing with GPT (Generative Pre-trained Transformer) models. It removes whitespace, special characters, and numbers from the text, and splits it into chunks of tokens to avoid exceeding the model's token limit.
 #'
 #' @param file A character string specifying the path to the input file.
 #' @param remove_whitespace Logical indicating whether to remove leading and trailing whitespace from the text. Default is \code{TRUE}.
@@ -25,6 +28,8 @@ api_key <- "sk-your_api_key"  # Replace with your actual API key
 #' @import pdftools
 #' @import stringr
 #' @import readtext
+#' @import magick
+#' @import tesseract
 #'
 #' @examples
 #' # Example 1: Parsing a PDF document
@@ -40,7 +45,7 @@ api_key <- "sk-your_api_key"  # Replace with your actual API key
 #' parsed_tokens <- parse_text(file = txt_file)
 #'
 #' @seealso
-#' \code{\link{pdftools::pdf_text}}, \code{\link{readtext::readtext}}, \code{\link{readLines}}
+#' \code{\link{pdftools::pdf_text}}, \code{\link{readtext::readtext}}, \code{\link{readLines}}, \code{\link{magick::image_read_pdf}}, \code{\link{tesseract::ocr}}
 #' 
 #' @export
 parse_text <- function(file, remove_whitespace = TRUE, remove_special_chars = TRUE, remove_numbers = TRUE) {
@@ -49,9 +54,23 @@ parse_text <- function(file, remove_whitespace = TRUE, remove_special_chars = TR
   
   text <- switch(
     ext,
-    pdf = pdftools::pdf_text(file),
+    pdf = {
+      # Check first if it's a text-based PDF or scanned PDF
+      text_check <- pdftools::pdf_text(file)
+      if(length(text_check) > 0 && nchar(text_check[[1]]) > 0) {
+        # It's a text-based PDF, use normal text extraction
+        pdftools::pdf_text(file)
+      } else {
+        # It's a scanned PDF, convert to image and then use OCR
+        image <- magick::image_read_pdf(file)
+        ocr(image)
+      }
+    },
     docx = readtext::readtext(file),
     txt = readLines(file),
+    png = ocr(file),
+    jpg = ocr(file),
+    tif = ocr(file),
     stop("Unsupported file type.")
   )
   
@@ -122,31 +141,30 @@ search_text <- function(text, keywords, window_size = 500) {
 
 #' Read and process text using GPT
 #'
-#' This function reads a list of text chunks and a question, and uses the GPT-3.5 Turbo model to generate a response
-#' based on the text and question. The function sends requests to the OpenAI API and processes the responses.
+#' This function reads a list of text chunks and a question, and uses the GPT model to generate a response
+#' based on the text and question. The function sends requests to the OpenAI API and processes the responses. This enhanced version features better error handling, question logging, improved content editing, and parameter tuning.
 #'
 #' @param chunk_list A list of text chunks to process.
 #' @param question The question to ask the model.
 #' @param model The model to use. Default is "gpt-3.5-turbo".
 #' @param temperature The temperature parameter for text generation. Default is 0.2.
 #' @param max_tokens The maximum number of tokens in the generated response. Default is 100.
-#' @param system_message_1 The initial system message to be included in the conversation with the model.
-#'                         Default is "You are a research assistant trying to answer questions posed based on text you are supplied with..."
+#' @param system_message_1 The initial system message to be included in the conversation with the model. Default is "You are a research assistant trying to answer questions posed based on text you are supplied with..."
 #' @param system_message_2 The system message for the content editor stage. Default is "You are a content editor who will read the previous responses..."
 #' @param num_retries The number of times to retry the API request in case of failure. Default is 5.
 #' @param pause_base The base pause time between retries. Default is 3.
 #' @param presence_penalty The presence penalty for text generation. Default is 0.0.
 #' @param frequency_penalty The frequency penalty for text generation. Default is 0.0.
 #'
-#' @return The generated response from the GPT-3.5 Turbo model.
+#' @return The generated response from the GPT model.
 #'
-#' @importFrom httr POST add_headers content_type_json encode
+#' @importFrom httr POST add_headers content_type_json encode RETRY stop_for_status
 #' @importFrom stringr str_trim
-#' @import RETRY
+#' @importFrom base Sys.time cat
 #'
 #' @examples
 #' # Set the path to your file
-#' file <- "C:/Users/JChas/OneDrive/Desktop/pdf_examples/Brants et al. 2007. Large language models in machine translations.pdf"
+#' file <- "C:/path/Brants et al. 2007. Large language models in machine translations.pdf"
 #'
 #' # Call the function
 #' text <- parse_text(file)
@@ -165,6 +183,12 @@ search_text <- function(text, keywords, window_size = 500) {
 #' question <- "Why do kittens meow?"
 #' gpt_read(chunk_list = text, question = question) -> response_3
 #' print(response_3)
+#'
+#' # Access question log
+#' log_content <- readLines("user_questions_GPT_answers.log")
+#' print(log_content)
+#' 
+#' @export
 gpt_read <- function(chunk_list, question = NULL, model = "gpt-3.5-turbo", temperature = 0.2, max_tokens = 100, 
                      system_message_1 = "You are a research assistant trying to answer questions posed based on text you are supplied with. Your goal is to provide answers based on the text provided. If the question is not related to or answered by the text, please only say you cannot find the answer in the text.",
                      system_message_2 = "You are a content editor who will read the previous responses from the AI and merge them into a single concise response to the question. If they mention that the answer cannot be found in the text for each chunk of text, only say that.",
@@ -228,49 +252,54 @@ gpt_read <- function(chunk_list, question = NULL, model = "gpt-3.5-turbo", tempe
   
   # Check if answer was found in the supplied text
   if (all(sapply(results, function(x) grepl("not found|irrelevant|applicable", tolower(x))))) {
-    return("The answer to the question was not found in the supplied text.")
-  }
-  
-  # Content editor stage
-  messages <- list(
-    list(role = "system", content = system_message),
-    list(role = "user", content = paste(results, collapse = "\n")),
-    list(role = "user", content = question)
-  )
-  
-  body_data <- list(
-    model = model,
-    temperature = temperature,
-    max_tokens = max_tokens,
-    messages = messages,
-    presence_penalty = presence_penalty,
-    frequency_penalty = frequency_penalty
-  )
-  
-  # Print debugging info
-  print(paste("Sending request with body data:", toString(body_data)))
-  
-  response <- RETRY(
-    "POST",
-    url = "https://api.openai.com/v1/chat/completions", 
-    add_headers(Authorization = paste("Bearer", api_key)),
-    content_type_json(),
-    encode = "json",
-    times = num_retries,
-    pause_base = pause_base,
-    body = body_data
-  )
-  
-  stop_for_status(response)
-  
-  if (length(content(response)$choices) > 0) {
-    message <- content(response)$choices[[1]]$message$content
+    final_answer = "The answer to the question was not found in the supplied text."
   } else {
-    message <- "The model did not return a message. You may need to increase max_tokens."
+    
+    # Content editor stage
+    messages <- list(
+      list(role = "system", content = system_message),
+      list(role = "user", content = paste(results, collapse = "\n")),
+      list(role = "user", content = question)
+    )
+    
+    body_data <- list(
+      model = model,
+      temperature = temperature,
+      max_tokens = max_tokens,
+      messages = messages,
+      presence_penalty = presence_penalty,
+      frequency_penalty = frequency_penalty
+    )
+    
+    # Print debugging info
+    print(paste("Sending request with body data:", toString(body_data)))
+    
+    response <- RETRY(
+      "POST",
+      url = "https://api.openai.com/v1/chat/completions", 
+      add_headers(Authorization = paste("Bearer", api_key)),
+      content_type_json(),
+      encode = "json",
+      times = num_retries,
+      pause_base = pause_base,
+      body = body_data
+    )
+    
+    stop_for_status(response)
+    
+    if (length(content(response)$choices) > 0) {
+      message <- content(response)$choices[[1]]$message$content
+    } else {
+      message <- "The model did not return a message. You may need to increase max_tokens."
+    }
+    
+    final_answer = gsub("\n", " ", message) 
+    final_answer = str_trim(final_answer) 
   }
   
-  clean_message <- gsub("\n", " ", message) 
-  clean_message <- str_trim(clean_message) 
+  # Log question and answer
+  log_entry <- paste(Sys.time(), "\t", question, "\t", final_answer, "\n")
+  cat(log_entry, file = "user_questions_GPT_answers.log", append = TRUE)
   
-  return(clean_message)
+  return(final_answer)
 }
