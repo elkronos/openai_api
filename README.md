@@ -30,16 +30,16 @@ Here's a brief overview of each function in this script:
 
 Here's a brief overview of each function in this script:
 
-*`gpt_personality`: The gpt_personality function is used to analyze personality traits based on a given text (lyrics). It takes a data frame as input, which should contain a column named "Text" with the lyrics to be analyzed. The function applies OpenAI's GPT model to evaluate how the author of the lyrics would respond to certain statements regarding their personality. Each statement is evaluated on a scale from 1 (disagree strongly) to 5 (agree strongly). The function uses the gpt_api function, which should be loaded separately, and requires an API key with associated cost.
-*`score_BFI`: The score_BFI function calculates the Big Five Inventory (BFI) scores based on the personality analysis performed by the gpt_personality function. It reverse scores relevant items and calculates the mean scores for each personality trait (Extraversion, Agreeableness, Conscientiousness, Neuroticism, Openness to Experience). The function also computes Cronbach's Alpha for each personality trait.
+* `gpt_personality`: The gpt_personality function is used to analyze personality traits based on a given text (lyrics). It takes a data frame as input, which should contain a column named "Text" with the lyrics to be analyzed. The function applies OpenAI's GPT model to evaluate how the author of the lyrics would respond to certain statements regarding their personality. Each statement is evaluated on a scale from 1 (disagree strongly) to 5 (agree strongly). The function uses the gpt_api function, which should be loaded separately, and requires an API key with associated cost.
+* `score_BFI`: The score_BFI function calculates the Big Five Inventory (BFI) scores based on the personality analysis performed by the gpt_personality function. It reverse scores relevant items and calculates the mean scores for each personality trait (Extraversion, Agreeableness, Conscientiousness, Neuroticism, Openness to Experience). The function also computes Cronbach's Alpha for each personality trait.
 
 ### 05 - gpt_read.R - This script is a collection of functions for processing and analyzing text using the GPT (Generative Pre-trained Transformer) model from OpenAI. 
 
 Here's a brief description of each function:
 
-*`parse_text`: This function takes different types of input files (PDF, DOCX, TXT) and performs optical character recognition (OCR) on scanned documents and images. It converts the text into tokens, removes whitespace, special characters, and numbers, and splits the text into chunks of tokens to avoid exceeding the model's token limit.
-*`search_text`: This function extracts passages from a given text that contain specified keywords. It searches for each keyword in the text and returns a list of passages (windows) that surround the occurrences of the keywords.
-*`gpt_read`: This function reads a list of text chunks and a question, and uses the GPT model to generate a response based on the text and question. It sends requests to the OpenAI API, processes the responses, and returns the generated response from the GPT model. It also includes additional features such as system messages, error handling, and parameter tuning.
+* `parse_text`: This function takes different types of input files (PDF, DOCX, TXT) and performs optical character recognition (OCR) on scanned documents and images. It converts the text into tokens, removes whitespace, special characters, and numbers, and splits the text into chunks of tokens to avoid exceeding the model's token limit.
+* `search_text`: This function extracts passages from a given text that contain specified keywords. It searches for each keyword in the text and returns a list of passages (windows) that surround the occurrences of the keywords.
+* `gpt_read`: This function reads a list of text chunks and a question, and uses the GPT model to generate a response based on the text and question. It sends requests to the OpenAI API, processes the responses, and returns the generated response from the GPT model. It also includes additional features such as system messages, error handling, and parameter tuning.
 
 
 ### 06 - gpt_search_api.R - This script provides a set of functions for performing grid searches using the GPT API. 
@@ -59,8 +59,8 @@ For each row, the text is passed to the gpt_api function (which should be loaded
 
 Here is a brief description of each function:
 
-*`whisper_transcribe`: Transcribes an audio file. The function makes an HTTP POST request to the OpenAI API endpoint for audio transcription. It sends the audio file, model name, response format, temperature, language (if provided), and prompt (if provided) as the request body. The response from the API is then parsed and returned as a list.
-*`whisper_translate`: Translates an audio file. It has similar parameters to the `whisper_transcribe` function, except it does not have the language parameter. Instead, it has the prompt parameter for specifying the translation prompt. Similarly to `whisper_transcribe`, the `whisper_translate` function makes an HTTP POST request to the OpenAI API endpoint for audio translation. It sends the audio file, model name, response format, temperature, and prompt (if provided) as the request body. The response from the API is parsed and returned as a list.
+* `whisper_transcribe`: Transcribes an audio file. The function makes an HTTP POST request to the OpenAI API endpoint for audio transcription. It sends the audio file, model name, response format, temperature, language (if provided), and prompt (if provided) as the request body. The response from the API is then parsed and returned as a list.
+* `whisper_translate`: Translates an audio file. It has similar parameters to the `whisper_transcribe` function, except it does not have the language parameter. Instead, it has the prompt parameter for specifying the translation prompt. Similarly to `whisper_transcribe`, the `whisper_translate` function makes an HTTP POST request to the OpenAI API endpoint for audio translation. It sends the audio file, model name, response format, temperature, and prompt (if provided) as the request body. The response from the API is parsed and returned as a list.
 
 ### 09 - `whisper_to_gpt.R` - This script defines a function called whisper_to_gpt that transcribes recorded audio using OpenAI's Whisper API and processes the transcription using OpenAI's GPT API. 
 
