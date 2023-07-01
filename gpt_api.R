@@ -1,10 +1,15 @@
 #' Generate a text response using OpenAI's API
 library(httr)
 library(stringr)
+
+# Set API key as system variable
+set_api_key("sk-paste-your-api-key-here")
+print(Sys.getenv("OPENAI_API_KEY"))
+
 #' This function sends a prompt to the OpenAI API and returns the generated text. 
 #' It handles API communication, error checking, and basic formatting of the response.
 #'
-#' Register for an API secert here: https://platform.openai.com/account/api-keys
+#' Register for an API secret here: https://platform.openai.com/account/api-keys
 #' 
 #' @importFrom httr RETRY POST content_type_json add_headers stop_for_status content
 #' @importFrom stringr str_trim
@@ -29,10 +34,10 @@ library(stringr)
 #' gpt_api("Write a poem about my cat Sam", model = "gpt-4")
 #' 
 #' @export
-# Function
 gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_tokens = 50, 
                 system_message = NULL, num_retries = 3, pause_base = 1, 
                 presence_penalty = 0.0, frequency_penalty = 0.0) {
+
   messages <- list(list(role = "user", content = prompt))
   if (!is.null(system_message)) {
     # prepend system message to messages list
@@ -42,7 +47,7 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
   response <- RETRY(
     "POST",
     url = "https://api.openai.com/v1/chat/completions", 
-    add_headers(Authorization = paste("Bearer", api_key)),
+    add_headers(Authorization = paste("Bearer", Sys.getenv("OPENAI_API_KEY"))),
     content_type_json(),
     encode = "json",
     times = num_retries,
@@ -56,6 +61,7 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
       frequency_penalty = frequency_penalty
     )
   )
+  
   
   # Check for HTTP errors
   stop_for_status(response)
