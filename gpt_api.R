@@ -3,6 +3,9 @@ library(httr)
 library(stringr)
 
 # Set API key as system variable
+set_api_key <- function(api_key) {
+  Sys.setenv(OPENAI_API_KEY = api_key)
+}
 set_api_key("sk-paste-your-api-key-here")
 print(Sys.getenv("OPENAI_API_KEY"))
 
