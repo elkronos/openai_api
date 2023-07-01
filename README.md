@@ -45,11 +45,11 @@ The function takes several parameters such as the training file ID, validation f
 * `whisper_translate`: Translates an audio file. It has similar parameters to the `whisper_transcribe` function, except it does not have the language parameter. Instead, it has the prompt parameter for specifying the translation prompt. Similarly to `whisper_transcribe`, the `whisper_translate` function makes an HTTP POST request to the OpenAI API endpoint for audio translation. It sends the audio file, model name, response format, temperature, and prompt (if provided) as the request body. The response from the API is parsed and returned as a list.
 
 ### 09 - _whisper_to_gpt.R_ - This script defines a function called whisper_to_gpt that transcribes recorded audio using OpenAI's Whisper API and processes the transcription using OpenAI's GPT API. 
-* (1) Records audio for the specified duration using the record function from the audio package. 
-* (2) Transcribes the recorded audio using the Whisper API by calling the whisper_transcribe function from the whisper_api.R file. It passes the audio file, API key, language, and prompt as arguments to the function.
-* (3) Checks the status of the transcription and retrieves the resulting transcript.
-* (4) Sends the transcription to the GPT API by calling the gpt_api function from the gpt_api.R file. It passes the transcription as an argument to the function.
-* (5) Returns the response from the GPT API. 
+* Records audio for the specified duration using the record function from the audio package. 
+* Transcribes the recorded audio using the Whisper API by calling the whisper_transcribe function from the whisper_api.R file. It passes the audio file, API key, language, and prompt as arguments to the function.
+* Checks the status of the transcription and retrieves the resulting transcript.
+* Sends the transcription to the GPT API by calling the gpt_api function from the gpt_api.R file. It passes the transcription as an argument to the function.
+* Returns the response from the GPT API. 
 The script also includes links to the gpt_api.R and whisper_api.R files, which should be loaded in order to use the whisper_to_gpt function
 
 # Contact
