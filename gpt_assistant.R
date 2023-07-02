@@ -104,7 +104,6 @@ gpt_sentiment <- function(df, system_message = "You are an expert sentiment anal
 }
 
 # User Interface
-# User Interface
 ui <- fluidPage(
   shinybusy::add_busy_spinner(spin = "cube-grid"),  # Add the loading spinner
   sidebarLayout(
