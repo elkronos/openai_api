@@ -12,7 +12,7 @@ Below is a summary of each script. You can find detailed explanations, optional 
 * `dalle_variation`: This function generates variations of an image by applying transformations such as scaling, modulating brightness, and applying blur. The resulting image is saved to disk.
 
 ### 02 - _fine_tune_model.R_ - Allows you to fine-tune a GPT (Generative Pre-trained Transformer) model using the OpenAI API. 
-The function takes several parameters such as the training file ID, validation file ID, model name, number of epochs, batch size, learning rate multiplier, prompt loss weight, and other optional parameters.
+* The function takes several parameters such as the training file ID, validation file ID, model name, number of epochs, batch size, learning rate multiplier, prompt loss weight, and other optional parameters.
 
 ### 03 - _gpt_api.R_ - This script provides functions for interacting with OpenAI's API to generate text responses. 
 * `gpt_api`: This function sends a prompt to the OpenAI API and returns the generated text. It handles API communication, error checking, and basic formatting of the response. The function takes several parameters such as the prompt, model to use, temperature, maximum tokens, system message, and penalties for new tokens. It makes a POST request to the OpenAI API endpoint and retrieves the generated text response.
