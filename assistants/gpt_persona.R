@@ -7,9 +7,14 @@ library(stringr)
 
 #' Personality analysis using GPT
 #'
-#' This function receives a data frame and applies the OpenAI's GPT model to analyze personality traits. 
-#' It takes as input a text (lyrics) and evaluates how the author of these lyrics would respond to certain statements 
+#' This function receives a data frame and applies the OpenAI's GPT model to analyze personality traits as an example of 
+#' how to iterate through different system messages and aggregate the responses.
+#' 
+#' With different system messages GPT can be made to take on different roles/personas.
+#' 
+#' Specifically, this code takes as input a text and is asked to evaluate how the artist might respond to statements 
 #' regarding their personality. Each statement is evaluated in a scale from 1 (disagree strongly) to 5 (agree strongly). 
+#' 
 #' If the API doesn't return a valid value, it assigns NA to the respective column in the data frame.
 #'
 #' @param df A data frame containing a column named "Text" with the lyrics to be analyzed.
@@ -80,10 +85,6 @@ gpt_personality <- function(df) {
   return(df)
 }
 
-
-# Load required libraries
-library(httr)
-library(stringr)
 #' Score Big Five Inventory (BFI)
 #'
 #' This function calculates the Big Five Inventory (BFI) scores based on the personality analysis done by the function 
