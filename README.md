@@ -23,6 +23,10 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 ### 03 - dashboards - Interactive dashboards integrated with an OpenAI API.
 * `gpt_sentiment_assistant.R` - Use GPT to analyze sentiment via a Shiny dashboard. Populates barplot and searchable table.
 
+### 04 - refactored - Scripts refactored into other languages.
+* `gpt_dateparser.py` - Parse dates using GPT. Refactored into Python.
+* `gpt_dateparser.rb` - Parse dates using GPT. Refactored into Ruby.
+
 # Contact
 - email: napoleonic_bores@proton.me
 - discord: elkronos
