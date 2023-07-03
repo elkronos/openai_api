@@ -6,7 +6,7 @@ library(lubridate)
 set_api_key <- function(api_key) {
   Sys.setenv(OPENAI_API_KEY = api_key)
 }
-set_api_key("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")
+set_api_key("sk-your-api-key")
 
 #' This function sends a prompt to the OpenAI API and returns the generated text. 
 #' It handles API communication, error checking, and basic formatting of the response.
