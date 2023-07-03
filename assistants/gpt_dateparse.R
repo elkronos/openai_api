@@ -6,7 +6,7 @@ library(lubridate)
 set_api_key <- function(api_key) {
   Sys.setenv(OPENAI_API_KEY = api_key)
 }
-set_api_key("sk-YOUR-API-KEY")
+set_api_key("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")
 
 #' This function sends a prompt to the OpenAI API and returns the generated text. 
 #' It handles API communication, error checking, and basic formatting of the response.
@@ -81,15 +81,14 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
 }
 
 #' @title Date Parsing Function Using GPT
-#' @description This function tries to parse date strings in a dataframe column, first with lubridate and then with a call to GPT for any dates that can't be parsed with lubridate.
+#' @description This function attempts to parse date strings in a specified dataframe column, first using the lubridate package and then with a call to GPT for any dates that can't be parsed with lubridate. For each unparsed date, GPT's response undergoes a final date parsing check, and only valid dates are returned. The function also suppresses any warnings that arise during the parsing process.
 #' @param df A data frame that contains the column to be parsed.
 #' @param column A character string that specifies the name of the column to be parsed.
 #' @param system_message A character string that specifies the system message to be sent to GPT (defaults to a specific prompt for date parsing).
 #' @param temperature A numeric value that specifies the randomness of the GPT output (defaults to 0.1).
-#' @return A data frame that includes the original date strings, parsed dates, the status of the parsing operation, and who parsed the date (R or GPT).
+#' @return A data frame that includes the original date strings, parsed dates, the status of the parsing operation (whether it was 'parsed' or 'failed'), and who parsed the date (either 'R' for lubridate, 'GPT' for the AI model, or 'NA' if both methods failed).
 #' @importFrom lubridate ymd
 #' @importFrom stringr str_extract str_remove_all str_trim
-#' @examples 
 #' @examples 
 #' \dontrun{
 #' id <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
@@ -113,10 +112,10 @@ gpt_date_parser <- function(df, column, system_message = "You are an expert date
   for (i in 1:nrow(df)) {
     id <- df$id[i]
     date <- df[[column]][i]
-    parsed_date <- tryCatch(
+    parsed_date <- suppressWarnings(tryCatch(
       ymd(date),
       error = function(e) return(NA)
-    )
+    ))
     
     if (!is.na(parsed_date)) {
       parsed_df <- rbind(parsed_df, data.frame(id = id, original = date, parsed = as.character(parsed_date), status = 'parsed', parsed_by = 'R', stringsAsFactors = FALSE))
@@ -137,13 +136,26 @@ gpt_date_parser <- function(df, column, system_message = "You are an expert date
     if (!is.na(response_date)) {
       response_date <- str_remove_all(response_date, "#")
       response_date <- str_trim(response_date)
-      failed_df$parsed_by[i] <- 'GPT'
+      
+      # Final check if the returned date is a valid date
+      final_date <- suppressWarnings(tryCatch(
+        ymd(response_date),
+        error = function(e) return(NA)
+      ))
+      
+      if (!is.na(final_date)) {
+        failed_df$parsed_by[i] <- 'GPT'
+        failed_df$parsed[i] <- as.character(final_date)
+      } else {
+        failed_df$parsed_by[i] <- 'NA'
+        failed_df$parsed[i] <- NA
+      }
     } else {
       response_date <- NA
       failed_df$parsed_by[i] <- 'NA'
+      failed_df$parsed[i] <- NA
     }
     
-    failed_df$parsed[i] <- response_date
     print(paste("Response from GPT:", response_date))
   }
   
