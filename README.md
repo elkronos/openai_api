@@ -25,6 +25,8 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 
 ### 04 - refactored - Scripts refactored into other languages.
 
+See a table of scripts and refactored languages below.
+
 | Package Name   | Description                                     | Language    |
 |----------------|-------------------------------------------------|-------------|
 | gpt_api        | Call the GPT API. Refactored into python.       | Python      |
