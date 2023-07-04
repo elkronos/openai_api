@@ -29,11 +29,11 @@ See a table of scripts and refactored languages below.
 
 | Package Name   | Description                                                  | Python      | Ruby        |
 |----------------|--------------------------------------------------------------|-------------|-------------|
-| gpt_api        | Call the GPT API. Refactored into Python.                     | &#x2713;    |             |
-| gpt_classifier | Classify/label data using GPT. Refactored into Python.        | &#x2713;    |             |
-| gpt_dateparser | Parse dates using GPT. Refactored into Python and Ruby.       | &#x2713;    | &#x2713;    |
-| gpt_sentiment  | Code sentiment of text using GPT. Refactored into Python.     | &#x2713;    |             |
-| whisper_api    | Translate or transcribe audio using GPT. Refactored into Python. | &#x2713; |             |
+| gpt_api        | Call the GPT API.                     | &#x2713;    |             |
+| gpt_classifier | Classify/label data using GPT.        | &#x2713;    |             |
+| gpt_dateparser | Parse dates using GPT.      | &#x2713;    | &#x2713;    |
+| gpt_sentiment  | Code sentiment of text using GPT.     | &#x2713;    |             |
+| whisper_api    | Translate or transcribe audio using GPT. | &#x2713; |             |
 
 
 # Contact
