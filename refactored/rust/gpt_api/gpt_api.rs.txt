@@ -1,0 +1,88 @@
+use serde::{Serialize, Deserialize};
+use reqwest::header::{HeaderValue, HeaderMap, AUTHORIZATION};
+use std::error::Error;
+use std::env;
+
+const API_URL: &str = "https://api.openai.com/v1/chat/completions";
+const BEARER: &str = "Bearer";
+
+#[derive(Serialize, Deserialize)]
+struct Message {
+    role: String,
+    content: String,
+}
+
+#[derive(Serialize, Deserialize)]
+struct APIRequest {
+    model: String,
+    temperature: f64,
+    max_tokens: i32,
+    messages: Vec<Message>,
+    presence_penalty: f64,
+    frequency_penalty: f64,
+}
+
+#[derive(Serialize, Deserialize)]
+struct APIResponse {
+    choices: Vec<Choice>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct Choice {
+    message: Option<Message>,
+}
+
+pub async fn gpt_api(client: &reqwest::Client, api_key: &str, prompt: &str, model: &str, temperature: f64, max_tokens: i32, system_message: Option<&str>) -> Result<String, Box<dyn Error>> {
+    // Create request message
+    let mut messages = vec![Message {role: "user".to_string(), content: prompt.to_string()}];
+    if let Some(sys_msg) = system_message {
+        messages.insert(0, Message {role: "system".to_string(), content: sys_msg.to_string()});
+    }
+
+    let request_body = APIRequest {
+        model: model.to_string(),
+        temperature,
+        max_tokens,
+        messages,
+        presence_penalty: 0.0,
+        frequency_penalty: 0.0,
+    };
+
+    // Prepare headers
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, HeaderValue::from_str(&format!("{} {}", BEARER, api_key))?);
+
+    // Send POST request
+    let res = client.post(API_URL)
+        .headers(headers)
+        .json(&request_body)
+        .send().await?;
+
+    // Check HTTP errors
+    if !res.status().is_success() {
+        return Err(format!("HTTP request failed with status {}", res.status()).into());
+    }
+
+    // Parse the JSON response
+    let response: APIResponse = res.json().await?;
+
+    // Get and clean the message
+    let message = match response.choices.get(0).and_then(|choice| choice.message.as_ref()) {
+        Some(msg) => msg.content.clone(),
+        None => "The model did not return a message. You may need to increase max_tokens.".to_string(),
+    };
+    
+    let clean_message = message.replace("\n", " ");
+    let clean_message = clean_message.trim().to_string();
+
+    Ok(clean_message)
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
+    let api_key = env::var("OPENAI_API_KEY")?;
+    let client = reqwest::Client::new();
+    let result = gpt_api(&client, &api_key, "Write a poem about my cat Sam", "gpt-3.5-turbo", 0.5, 50, None).await?;
+    println!("{}", result);
+    Ok(())
+}

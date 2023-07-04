@@ -1,0 +1,65 @@
+use std::collections::HashMap;
+use std::error::Error;
+use chrono::{NaiveDate, ParseError};
+use regex::Regex;
+use csv::{Reader, Writer, StringRecord, Error as CsvError};
+
+#[derive(Debug)]
+enum ParsingStatus {
+    Parsed,
+    Failed,
+}
+
+#[derive(Debug)]
+struct DataRow {
+    id: i32,
+    original: String,
+    parsed: Option<NaiveDate>,
+    status: ParsingStatus,
+    parsed_by: String,
+}
+
+async fn gpt_date_parser(client: &reqwest::Client, api_key: &str, path: &str) -> Result<Vec<DataRow>, Box<dyn Error>> {
+    let mut reader = Reader::from_path(path)?;
+    let mut data_rows = vec![];
+    let mut failed_rows = vec![];
+    
+    let date_regex = Regex::new(r"#.*#")?;
+    
+    for result in reader.records() {
+        let record = result?;
+        let id: i32 = record.get(0).unwrap().parse()?;
+        let original: String = record.get(1).unwrap().to_string();
+        let parsed = NaiveDate::parse_from_str(&original, "%Y-%m-%d").ok();
+        
+        let (status, parsed_by) = match parsed {
+            Some(_) => (ParsingStatus::Parsed, "R".to_string()),
+            None => {
+                failed_rows.push(id);
+                (ParsingStatus::Failed, "NA".to_string())
+            }
+        };
+        
+        data_rows.push(DataRow { id, original, parsed, status, parsed_by });
+    }
+    
+    for id in failed_rows {
+        let original = &data_rows[id as usize].original;
+        let prompt = format!("What date is specified in '{}'", original);
+        
+        let response = gpt_api(client, api_key, &prompt, "gpt-3.5-turbo", 0.5, 50, Some("You are an expert date identifier. You will be given text which you must read and determine if it's a real date. If it is a real date, restate it in YYYY-MM-DD format, surrounded with '#'. If there is no date, state that there is no date.")).await?;
+        
+        let response_date = date_regex.find(&response)
+            .map(|mat| mat.as_str())
+            .and_then(|s| NaiveDate::parse_from_str(s.trim_matches('#'), "%Y-%m-%d").ok());
+        
+        data_rows[id as usize].parsed = response_date;
+        data_rows[id as usize].parsed_by = match response_date {
+            Some(_) => "GPT".to_string(),
+            None => "NA".to_string(),
+        };
+    }
+    
+    data_rows.sort_by_key(|row| row.id);
+    Ok(data_rows)
+}
