@@ -9,10 +9,11 @@ library(stringr)
 library(future)
 library(shinybusy)
 
-# Make example data
+## Make example data
+## Variables must be named the same in your data as in the example output  - working on making that flexible. 
 # df <- data.frame(
-#   id = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-#   text = c("I love this product!",
+#   ID = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+#   Text = c("I love this product!",
 #            "The product is okay.",
 #            "I hate this product!",
 #            "It's decent",
