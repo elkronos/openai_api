@@ -167,7 +167,7 @@ gpt_api <- function(prompt, model = "gpt-3.5-turbo", temperature = 0.5, max_toke
 #' gpt_classifier(df, 7)
 #'
 #' @export
-gpt_classifier <- function(dt, n, system_message = "You are an expert data type classifier AI. Please carefully read the following series of values and respond with only a single numeric value representing the type of data it is. Respond with '1' if it's numeric (unique values all numbers), '2' if it's categorical (an alternating value or dog, the column tends to have low uniqueness among responses, any variable primarily going to be used as a category), '3' if it's character (names, words, strings of letters or cells with only tex), '4' if it's a date (regardless of format 'January 1st', 'Nov-1999', '11-01-1999'), '5' if it's logical (only TRUE/FALSE or T/F), or '6' if it's geospatial (coordinates). If you are unsure provide your best guess as to how the data would be used analytically which affords the most freedom.", temperature = 0.2) {
+gpt_classifier <- function(dt, n, system_message = "You are tasked with classifying data types. Please review the given series of values and select the most appropriate data type, responding only with the number that most accurately reflects the type of data: [1] Numeric (All unique numerical values), [2] Categorical (Low uniqueness, used mainly as categories e.g. 'high' or 'low'), [3] Character (Words, names, or any string of letters), [4] Date (Any format e.g. 'January 1st', 'Nov-1999', '11-01-1999'), [5] Logical (Only TRUE/FALSE or T/F values), [6] Geospatial (Coordinates). If unsure, select the classification that offers the most analytical flexibility.", temperature = 0.2) {
   
   # reshape the data using reshape_dt function
   dt <- reshape_dt(dt, n)
