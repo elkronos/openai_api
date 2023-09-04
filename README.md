@@ -1,5 +1,5 @@
 # openai_api
-Interact with openai APIs using (DALLE2, GPT, Whisper). The code base is primairly in R, but refactored scripts are being developed and tested.
+Interact with openai APIs using (DALLE2, GPT, Whisper). The code base is primairly in R, but refactored scripts are being developed and tested. For best results, use GPT 4.
 
 ## Scripts
 
