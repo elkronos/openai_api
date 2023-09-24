@@ -15,6 +15,7 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 * `gpt_audioquery.R` - Record audio for a given duration, transcribe it using the Whisper API, and send the transcription to the GPT.
 * `gpt_dateparse.R` - Parse dates with GPT.
 * `gpt_classifier.R` - Classifies the type of data in each column in a dataset.
+* `gpt_finetune.R` - Wrapper function for fine-tuning models using your own documents. Provides functions to upload documents, check status, and cancel jobs.
 * `gpt_gridsearch.R` - Performs a grid search over the specified GPT models and parameters, using a given prompt.
 * `gpt_persona.R` - Illustrates how to vary system messages (change roles/personas) across a dataset to generate multiple responses.
 * `gpt_read.R` -  Reads a list of text chunks and a question, and uses the GPT model to generate a response based on the text.
