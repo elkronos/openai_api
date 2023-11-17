@@ -17,6 +17,7 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 * `gpt_classifier.R` - Classifies the type of data in each column in a dataset.
 * `gpt_finetune.R` - Wrapper function for fine-tuning models using your own documents. Provides functions to upload documents, check status, and cancel jobs.
 * `gpt_gridsearch.R` - Performs a grid search over the specified GPT models and parameters, using a given prompt.
+* `gpt_nlp.R` - Function that allows the user to convert text into root words, label the part of speech (noun, verb, adverb, etc), or analyze the sentiment of text (-1, 0, 1).
 * `gpt_persona.R` - Illustrates how to vary system messages (change roles/personas) across a dataset to generate multiple responses.
 * `gpt_read.R` -  Reads a list of text chunks and a question, and uses the GPT model to generate a response based on the text.
 * `gpt_sentiment.R` - Conducts sentiment analysis on a given dataframe using the GPT.
@@ -35,8 +36,3 @@ See a table of scripts and refactored languages below.
 | gpt_dateparser | Parse dates using GPT.      | &#x2713;    | &#x2713;    |
 | gpt_sentiment  | Code sentiment of text using GPT.     | &#x2713;    | &#x2713;    |
 | whisper_api    | Translate or transcribe audio using GPT. | &#x2713; |             |
-
-
-# Contact
-- email: napoleonic_bores@proton.me
-- discord: elkronos
