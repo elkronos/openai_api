@@ -34,5 +34,6 @@ See a table of scripts and refactored languages below.
 | gpt_api        | Call the GPT API.                     | &#x2713;    | &#x2713;    |
 | gpt_classifier | Classify/label data using GPT.        | &#x2713;    |             |
 | gpt_dateparser | Parse dates using GPT.      | &#x2713;    | &#x2713;    |
+| gpt_read       | Read documents and ask questions. | &#x2713; |             |
 | gpt_sentiment  | Code sentiment of text using GPT.     | &#x2713;    | &#x2713;    |
 | whisper_api    | Translate or transcribe audio using GPT. | &#x2713; |             |
