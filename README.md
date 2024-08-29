@@ -19,6 +19,7 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 * `gpt_gridsearch.R` - Performs a grid search over the specified GPT models and parameters, using a given prompt.
 * `gpt_nlp.R` - Function that allows the user to convert text into root words, label the part of speech (noun, verb, adverb, etc), or analyze the sentiment of text (-1, 0, 1).
 * `gpt_persona.R` - Illustrates how to vary system messages (change roles/personas) across a dataset to generate multiple responses.
+* `gpt_random_number_experiment.R` - Based on the `gpt_gridsearch.R` assistant, allows use to vary prompts, temperature, system messages, and add context. Designed to perform an experiment whereby GPT picks random numbers between 0 - 10.
 * `gpt_read.R` -  Reads a list of text chunks and a question, and uses the GPT model to generate a response based on the text.
 * `gpt_sentiment.R` - Conducts sentiment analysis on a given dataframe using the GPT.
 
