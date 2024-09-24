@@ -158,3 +158,49 @@ estimate_cost <- function(input_tokens, output_tokens, model = "gpt-3.5-turbo") 
   
   return(result)
 }
+
+#' Convert Text to Embeddings using OpenAI's API
+#' 
+#' This function sends text to the OpenAI API and returns the generated embeddings.
+#' It handles API communication and returns the embeddings as a numeric vector.
+#' 
+#' @param text The text to be converted to embeddings.
+#' @param model The model to use for generating embeddings. Default is "text-embedding-ada-002".
+#' @param num_retries Number of times to retry the request in case of failure. Default is 3.
+#' @param pause_base The number of seconds to wait between retries. Default is 1.
+#' 
+#' @return A numeric vector containing the embeddings for the input text.
+#' 
+#' @examples
+#' text_to_embeddings("OpenAI provides powerful AI models")
+#' 
+#' @export
+text_to_embeddings <- function(text, model = "text-embedding-ada-002", num_retries = 3, pause_base = 1) {
+  
+  # Make the API request to get the embeddings
+  response <- RETRY(
+    "POST",
+    url = "https://api.openai.com/v1/embeddings", 
+    add_headers(Authorization = paste("Bearer", Sys.getenv("OPENAI_API_KEY"))),
+    content_type_json(),
+    encode = "json",
+    times = num_retries,
+    pause_base = pause_base,
+    body = list(
+      model = model,
+      input = text
+    )
+  )
+  
+  # Check for HTTP errors
+  stop_for_status(response)
+  
+  # Parse the embeddings from the API response
+  if (length(content(response)$data) > 0) {
+    embeddings <- content(response)$data[[1]]$embedding
+  } else {
+    stop("The API did not return any embeddings.")
+  }
+  
+  return(as.numeric(embeddings))
+}
