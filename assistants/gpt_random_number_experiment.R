@@ -199,14 +199,16 @@ gpt_random_number_experiment <- function(original_prompt, models, temperatures, 
                                         stringsAsFactors = FALSE)
   
   # Initialize an empty data frame to store results
-  search_results <- data.frame(request_id = integer(),
-                               timestamp = character(), 
-                               model = character(), 
-                               temperature = numeric(), 
-                               system_message = character(), 
-                               response = integer(),
-                               used_context = logical(),
-                               stringsAsFactors = FALSE)
+  search_results <- data.frame(
+    request_id = integer(),
+    timestamp = character(), 
+    model = character(), 
+    temperature = numeric(), 
+    system_message = character(), 
+    response = integer(),
+    used_context = logical(),
+    stringsAsFactors = FALSE
+  )
   
   request_id <- 1
   total_combinations <- nrow(parameter_combinations)
@@ -221,40 +223,48 @@ gpt_random_number_experiment <- function(original_prompt, models, temperatures, 
                        ", System Message = ", current_params$system_messages), log_file, verbose)
     
     for (context in if (use_context) c(FALSE, TRUE) else c(FALSE)) {
-      last_valid_number <- NULL  # Reset for each context run
+      # Instead of a single last_valid_number, maintain a vector of all previously chosen numbers
+      previous_numbers <- c()
       
       for (j in seq_len(calls_per_combination)) {
         log_message(paste0("Processing call ", j, " of ", calls_per_combination, " (Overall call ", call_counter, " of ", total_calls, ")"), log_file, verbose)
-        log_message(paste("DEBUG: Context =", context, ", Last valid number =", last_valid_number), log_file, verbose)
+        log_message(paste("DEBUG: Context =", context, ", Previous numbers =", paste(previous_numbers, collapse=", ")), log_file, verbose)
         
-        if (context && j > 1 && !is.null(last_valid_number)) {
-          adjusted_prompt <- paste(original_prompt, "You previously chose", last_valid_number)
+        # If using context and we have previously chosen numbers, add them to the prompt
+        if (context && length(previous_numbers) > 0) {
+          adjusted_prompt <- paste(
+            original_prompt, 
+            "You previously chose:", 
+            paste(previous_numbers, collapse = ", ")
+          )
         } else {
           adjusted_prompt <- original_prompt
         }
         
         log_message(paste("Prompt:", adjusted_prompt), log_file, verbose)
         
-        raw_response <- generate_gpt_response(prompt = adjusted_prompt, 
-                                              model = current_params$models, 
-                                              temperature = current_params$temperatures,
-                                              max_tokens = max_tokens, 
-                                              system_message = current_params$system_messages,
-                                              verbose = verbose, 
-                                              log_file = log_file)
+        raw_response <- generate_gpt_response(
+          prompt = adjusted_prompt, 
+          model = current_params$models, 
+          temperature = current_params$temperatures,
+          max_tokens = max_tokens, 
+          system_message = current_params$system_messages,
+          verbose = verbose, 
+          log_file = log_file
+        )
         
         log_message(paste("GPT Response:", raw_response), log_file, verbose)
         
         parsed_response <- extract_valid_number(raw_response, verbose = verbose, log_file = log_file)
         log_message(paste("DEBUG: Parsed response:", parsed_response), log_file, verbose)
         
-        # Update last_valid_number immediately
+        # Append the parsed response to previous_numbers if valid
         if (!is.null(parsed_response)) {
-          last_valid_number <- parsed_response
-          log_message(paste("DEBUG: Updated last valid number:", last_valid_number), log_file, verbose)
+          previous_numbers <- c(previous_numbers, parsed_response)
+          log_message(paste("DEBUG: Updated previous numbers:", paste(previous_numbers, collapse=", ")), log_file, verbose)
         }
         
-        # Store the result
+        # Store the result if we got a valid number
         if (!is.null(parsed_response)) {
           timestamp <- Sys.time()
           
@@ -297,18 +307,19 @@ gpt_random_number_experiment <- function(original_prompt, models, temperatures, 
 }
 
 
+
 #' Example Usage for GPT Experiment
 #'
 #' Demonstrates how to set up and run a grid search experiment using various GPT models, temperatures, and system messages.
 #'
 #' @examples
 #' \dontrun{
-#' original_prompt <- "Pick a random number from 0 - 10. Only respond with a single valid number between 0 and 10."
-#' models <- c("gpt-4o", "gpt-3.5-turbo")
+#' original_prompt <- "Pick a random number from 1 - 10. Only respond with a single valid number between 1 and 10."
+#' models <- c("gpt-4o", "gpt-3.5-turbo", "gpt-4-turbo")
 #' temperatures <- seq(0.0, 1.0, by = 0.2)
 #' system_messages <- c("You are a human.", "You are an artificial intelligence specializing in generating random numbers.")
-#' calls_per_combination <- 25
-#' max_tokens <- 50
+#' calls_per_combination <- 20
+#' max_tokens <- 500
 #' use_context <- TRUE
 #' log_file <- "gpt_log.txt"
 #'
