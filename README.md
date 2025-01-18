@@ -8,7 +8,8 @@ Below is a summary of each directory. Please see specific scripts for detailed r
 ### 01 - api_base - Basic API connectivity.
 * `dalle_api.R` - Sends prompt to generate and download images from DALLE.
 * `fine_tune_model.R` -  Function to fine-tune a GPT model using the OpenAI API.
-* `gpt_api.R` - Sends a prompt to GPT via the OpenAI API and returns the generated text. 
+* `gpt_api.R` - Sends a prompt to GPT via the OpenAI API and returns the generated text.
+* `gpt_contextual_api.R` - Sends a prompt to GPT via the API; and affords the ability to manage the context of a conversation and keep multiple sessions.
 * `whisper_api.R` - Transcribes audio files.
 
 ### 02 - assistants - Scripts designed to assist in completeing specific tasks.
@@ -33,6 +34,7 @@ See a table of scripts and refactored languages below.
 | Package Name   | Description                                                  | Python      | Ruby        |
 |----------------|--------------------------------------------------------------|-------------|-------------|
 | gpt_api        | Call the GPT API.                     | &#x2713;    | &#x2713;    |
+| gpt_contextual_api        | Call the GPT API.                     |        | &#x2713;    |
 | gpt_classifier | Classify/label data using GPT.        | &#x2713;    |             |
 | gpt_dateparser | Parse dates using GPT.      | &#x2713;    | &#x2713;    |
 | gpt_read       | Read documents and ask questions. | &#x2713; |             |
