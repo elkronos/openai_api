@@ -333,70 +333,279 @@ create_chat_completion_with_failover <- function(
   stop("All candidate models failed.")
 }
 
-#' @title Count Tokens
-#' 
+#' @title Enhanced Token Estimation
+#'
 #' @description
-#' Provides a rough estimate of the number of tokens in a text string by splitting
-#' on words, punctuation, and whitespace. 
-#' 
+#' Approximates how OpenAI's GPT models tokenize text by splitting on word
+#' boundaries, punctuation, common special characters, and repeated letters.
+#'
 #' @details
-#' This is only an approximation and may not match exactly how the OpenAI tokenizer
-#' counts tokens. 
-#' 
-#' @importFrom base strsplit
-#' 
-#' @param text A character string to estimate the token count for.
-#' 
-#' @return An integer representing the approximate token count.
-#' 
+#' This is still only an approximation of how GPT-based Byte-Pair Encoding (BPE)
+#' or TikToken might split text. For the most accurate count, you would need to
+#' call OpenAI's tokenizer API directly (which may not be available in all
+#' languages).
+#'
+#' The function:
+#' \itemize{
+#'   \item Breaks on most punctuation and whitespace
+#'   \item Captures repeated sequences of letters/numbers
+#'   \item Attempts to handle special or repeated patterns that might be
+#'         sub-tokenized (e.g., repeated exclamation marks, repeated letters)
+#' }
+#'
+#' @param text A character string to estimate token count for.
+#' @param include_legacy Logical. If TRUE, also runs a simpler fallback split
+#'   for comparison and returns both counts.
+#'
+#' @return If \code{include_legacy=FALSE}, returns a single integer. If
+#'   \code{include_legacy=TRUE}, returns a named integer vector with elements
+#'   \code{enhanced_count} and \code{legacy_count}.
+#'
 #' @examples
 #' \dontrun{
-#' n <- count_tokens("Hello, world!")
-#' print(n)
+#' txt <- "Hello!!! This is a test 123 123!"
+#' token_count <- enhanced_token_count(txt, include_legacy = TRUE)
+#' print(token_count)
 #' }
-count_tokens <- function(text) {
-  tokens <- strsplit(text, "(?<=\\W)(?=\\w)|(?<=\\w)(?=\\W)", perl = TRUE)[[1]]
-  length(tokens)
+enhanced_token_count <- function(text, include_legacy = FALSE) {
+  # Basic approach tries to capture repeated punctuation / special chars / digits.
+  #
+  # The big idea: break on sequences of letters vs. digits vs. punctuation,
+  # and also split repeated punctuation, etc.
+  #
+  # One example of a rough BPE-like pattern:
+  #   - A sequence of letters: [A-Za-z]+
+  #   - A sequence of digits: [0-9]+
+  #   - Punctuation, possibly repeated: [[:punct:]]+
+  #
+  # We'll stitch them into one big pattern, then remove empty tokens.
+  pattern <- "([[:alpha:]]+)|([[:digit:]]+)|([[:punct:]]+)|([[:space:]]+)"
+  
+  # Extract all matches. Each match is a separate token chunk.
+  # We'll exclude purely whitespace matches from the final count.
+  matches <- gregexpr(pattern, text, perl = TRUE)
+  pieces <- regmatches(text, matches)[[1]]
+  
+  # Remove pure spaces
+  pieces <- pieces[!grepl("^[[:space:]]+$", pieces)]
+  
+  # For repeated punctuation, we might want to further split each chunk:
+  # e.g., "!!!" => "!", "!", "!"
+  # We'll do that with another pass if punctuation chunk is longer than 1 char.
+  final_tokens <- lapply(pieces, function(x) {
+    if (grepl("^[[:punct:]]+$", x) && nchar(x) > 1) {
+      # separate each punctuation char
+      unlist(strsplit(x, "", fixed = TRUE))
+    } else {
+      x
+    }
+  })
+  final_tokens <- unlist(final_tokens)
+  
+  # For legacy comparison:
+  if (include_legacy) {
+    # The simpler old version:
+    legacy_split <- strsplit(text, "(?<=\\W)(?=\\w)|(?<=\\w)(?=\\W)", perl = TRUE)[[1]]
+    # Clean out empties
+    legacy_split <- legacy_split[nzchar(legacy_split)]
+    c(
+      enhanced_count = length(final_tokens),
+      legacy_count   = length(legacy_split)
+    )
+  } else {
+    length(final_tokens)
+  }
 }
+
+#' @title GPT API Wrapper
+#'
+#' @description
+#' Provides a single function interface (`gpt_api()`) that can:
+#' - Set the API key
+#' - List available models
+#' - Filter/sort models
+#' - Create a chat completion
+#' - Extract the assistant's text from a response
+#' - Create a chat completion with failover
+#' - Estimate token counts
+#' - Estimate cost
+#' - Generate embeddings
+#'
+#' @details
+#' Call `gpt_api()` with the `action` argument specifying which functionality you want.
+#' All other arguments can be passed via `...` and are forwarded to the underlying function.
+#'
+#' Supported `action` values:
+#' \itemize{
+#'   \item \strong{"set_api_key"} — sets the API key (calls \code{set_api_key}).
+#'   \item \strong{"list_models"} — retrieves model list (calls \code{list_available_models}).
+#'   \item \strong{"filter_models"} — filters/sorts a models data frame (calls \code{filter_and_sort_models}).
+#'   \item \strong{"create_chat"} — sends a chat request (calls \code{create_chat_completion}).
+#'   \item \strong{"extract_message"} — extracts assistant text (calls \code{extract_assistant_message}).
+#'   \item \strong{"create_chat_failover"} — chat with model failover (calls \code{create_chat_completion_with_failover}).
+#'   \item \strong{"estimate_tokens"} — estimates token count (calls \code{enhanced_token_count}).
+#'   \item \strong{"estimate_cost"} — estimates cost (calls \code{estimate_cost}).
+#'   \item \strong{"embedding"} — generates embeddings (calls \code{text_to_embeddings}).
+#' }
+#'
+#' @param action A character string specifying which helper function to call.
+#' @param ... Additional arguments passed on to the underlying helper function.
+#'
+#' @return Varies depending on `action`.
+#'
+#' @examples
+#' \dontrun{
+#' # Set API key
+#' gpt_api("set_api_key", api_key = "sk-xxxxx")
+#'
+#' # List all models
+#' mods <- gpt_api("list_models")
+#' head(mods)
+#'
+#' # Create a chat
+#' msgs <- list(
+#'   list(role = "system", content = "You are a helpful assistant."),
+#'   list(role = "user",   content = "Hello!")
+#' )
+#' resp <- gpt_api("create_chat", messages = msgs, model = "gpt-3.5-turbo")
+#' cat(gpt_api("extract_message", resp = resp))
+#'
+#' # Estimate cost
+#' cost_info <- gpt_api("estimate_cost", input_tokens=1200, output_tokens=800, model="gpt-3.5-turbo")
+#' print(cost_info)
+#' }
+gpt_api <- function(action, ...) {
+  switch(
+    EXPR = action,
+    
+    "set_api_key" = {
+      set_api_key(...)
+    },
+    
+    "list_models" = {
+      list_available_models(...)
+    },
+    
+    "filter_models" = {
+      filter_and_sort_models(...)
+    },
+    
+    "create_chat" = {
+      create_chat_completion(...)
+    },
+    
+    "extract_message" = {
+      extract_assistant_message(...)
+    },
+    
+    "create_chat_failover" = {
+      create_chat_completion_with_failover(...)
+    },
+    
+    "estimate_tokens" = {
+      enhanced_token_count(...)
+    },
+    
+    "estimate_cost" = {
+      estimate_cost(...)
+    },
+    
+    "embedding" = {
+      text_to_embeddings(...)
+    },
+    
+    {
+      stop(
+        "Unknown action: '", action,
+        "'. Valid actions are: set_api_key, list_models, filter_models, ",
+        "create_chat, extract_message, create_chat_failover, estimate_tokens, ",
+        "estimate_cost, embedding."
+      )
+    }
+  )
+}
+
 
 #' @title Estimate Cost
 #' 
 #' @description
-#' Calculates approximate cost given a model, input token count, and output token count.
+#' Calculates approximate cost based on a model's per-token rates and the specified
+#' number of input and output tokens. This version includes updated rates for newer
+#' “gpt-4o” and “gpt-4.5-preview” style models, as well as others you listed.
 #' 
 #' @details
-#' Prices are approximate and based on known OpenAI rates for GPT-3.5-turbo and GPT-4.
+#' Prices are expressed per 1 million tokens in your table. This function converts
+#' them to per 1k tokens internally. It attempts to match the provided model name
+#' via partial pattern matching. If no match is found, it falls back to the original
+#' GPT-3.5 and GPT-4 logic. You can add or remove entries as your needs change.
+#'
+#' @importFrom base grepl
 #' 
-#' @param input_tokens Integer. Number of input tokens.
+#' @param input_tokens  Integer. Number of input tokens.
 #' @param output_tokens Integer. Number of output tokens.
-#' @param model A character string specifying the model (e.g., `"gpt-3.5-turbo"`, `"gpt-4"`).
+#' @param model         Character string specifying the model name/ID.
 #' 
-#' @return A list with elements `input_tokens`, `output_tokens`, `input_cost`,
-#'   `output_cost`, `total_cost`.
+#' @return A list with:
+#' \describe{
+#'   \item{input_tokens}{Integer, the number of input tokens.}
+#'   \item{output_tokens}{Integer, the number of output tokens.}
+#'   \item{input_cost}{Numeric, the approximate cost for input tokens.}
+#'   \item{output_cost}{Numeric, the approximate cost for output tokens.}
+#'   \item{total_cost}{Numeric, sum of input_cost + output_cost.}
+#' }
 #' 
 #' @examples
 #' \dontrun{
-#' est <- estimate_cost(1200, 800, "gpt-4")
-#' print(est)
+#' estimate_cost(1200, 800, "gpt-4o")
+#' estimate_cost(1200, 800, "gpt-4.5-preview")
+#' estimate_cost(1200, 800, "gpt-3.5-turbo")
 #' }
 estimate_cost <- function(input_tokens, output_tokens, model = "gpt-3.5-turbo") {
-  if (model == "gpt-4") {
-    price_1k_in  <- ifelse(input_tokens <= 8000, 0.03, 0.06)
-    price_1k_out <- ifelse(output_tokens <= 8000, 0.06, 0.12)
-  } else {
-    price_1k_in  <- 0.002
-    price_1k_out <- 0.002
+  
+  # Table of partial patterns vs. cost per 1k tokens (input, output)
+  # Model: Price per 1M => dividing by 1000 => per 1k tokens
+  # Adjust or extend as needed
+  cost_map <- list(
+    list(pattern = "gpt-4.5-preview",     input = 0.075,  output = 0.15),
+    list(pattern = "gpt-4o-mini",         input = 0.00015, output = 0.0006),
+    list(pattern = "gpt-4o-realtime",     input = 0.005,   output = 0.02),
+    list(pattern = "gpt-4o",              input = 0.0025,  output = 0.01),
+    list(pattern = "o1-mini",             input = 0.0011,  output = 0.0044),
+    list(pattern = "o3-mini",             input = 0.0011,  output = 0.0044),
+    list(pattern = "o1",                  input = 0.015,   output = 0.06),
+    list(pattern = "gpt-3.5-turbo",       input = 0.0005,  output = 0.0015),
+    list(pattern = "gpt-4",               input = 0.03,    output = 0.06)
+  )
+  
+  # Defaults if no pattern is matched
+  price_1k_in  <- 0.002  # older “GPT-3” style or fallback
+  price_1k_out <- 0.002
+  
+  # Attempt partial match
+  lower_model <- tolower(model)
+  for (entry in cost_map) {
+    if (grepl(entry$pattern, lower_model, fixed = FALSE)) {
+      price_1k_in  <- entry$input
+      price_1k_out <- entry$output
+      break
+    }
   }
+  
+  # Compute cost
   input_cost  <- input_tokens  / 1000 * price_1k_in
   output_cost <- output_tokens / 1000 * price_1k_out
+  total_cost  <- input_cost + output_cost
+  
   list(
     input_tokens  = input_tokens,
     output_tokens = output_tokens,
     input_cost    = input_cost,
     output_cost   = output_cost,
-    total_cost    = input_cost + output_cost
+    total_cost    = total_cost
   )
 }
+
+
 
 #' @title Convert Text to Embeddings
 #' 
